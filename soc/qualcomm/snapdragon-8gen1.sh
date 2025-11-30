@@ -44,12 +44,12 @@ mkdir build && cd build
 
 # --- 针对骁龙8+ Gen 1的编译器标志 ---
 # 1. CPU调优: Kryo CPU基于Cortex-X2，使用cortex-x2作为tune目标更精确
-# 2. 架构: armv9.2-a
+# 2. 架构: armv9-a
 # 3. 性能/功耗: 骁龙8+ Gen 1能效提升30%(C8)，可以放心使用-O3
 # 4. AI: 虽然硬件支持FP16等，但llama.cpp的GGML后端主要通过Vulkan和CPU指令加速，无需特殊AI标志
 cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_CXX_FLAGS="-O3 -flto -march=armv9.2-a+dotprod -mtune=cortex-x2 -DNDEBUG" \
-  -DCMAKE_C_FLAGS="-O3 -flto -march=armv9.2-a+dotprod -mtune=cortex-x2 -DNDEBUG" \
+  -DCMAKE_CXX_FLAGS="-O3 -flto -march=armv9-a+dotprod+fp16+bf16+sve2 -mtune=cortex-x2 -DNDEBUG" \
+  -DCMAKE_C_FLAGS="-O3 -flto -march=armv9-a+dotprod+fp16+bf16+sve2 -mtune=cortex-x2 -DNDEBUG" \
   -DBUILD_SHARED_LIBS=ON \
   ${vulkan_flag} \
   -DGGML_DOTPROD=ON \
