@@ -8,17 +8,6 @@ pkg upgrade
 echo "Checking environment..."
 pkg install ninja clang git make
 
-git clone https://github.com/flame/blis.git
-chmod +x -R blis/
-cd blis/
-./configure --enable-cblas --enable-threading=pthreads --prefix=$PREFIX arm64
-make -j4 && make install
-cd ..
-
-ls $PREFIX/lib/libblis*
-ls $PREFIX/include/blis*
-sleep 1
-
 echo "现版本llama.cpp不支持Mali-G77的Vulkan驱动, 回退到CPU"
 
 sleep 1
@@ -34,8 +23,6 @@ cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DGGML_VULKAN=OFF \
   -DGGML_OPENCL=OFF \
   -DGGML_DOTPROD=ON \
-  -DGGML_BLAS=ON \
-  -DGGML_BLAS_VENDOR=FLAME \
   -DGGML_NATIVE=ON
 
 echo "开始编译"
