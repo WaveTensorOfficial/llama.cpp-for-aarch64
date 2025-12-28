@@ -23,7 +23,7 @@ cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DGGML_VULKAN=OFF \
   -DGGML_OPENCL=OFF \
   -DGGML_DOTPROD=ON \
-  -DGGML_NATIVE=ON
+  -DGGML_NATIVE=OFF
 
 echo "开始编译"
 sleep 1
