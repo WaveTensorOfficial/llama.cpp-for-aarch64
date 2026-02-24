@@ -1,8 +1,38 @@
-# llama.cpp
+# llama.cpp for aarch64
 
-![llama](https://user-images.githubusercontent.com/1991296/230134379-7181e485-c521-4d23-a0d6-f7b3b61ba524.png)
+In short, this repository is designed to make llama.cpp easily accessible for Android users, particularly those on Termux. It provides **optimized build scripts**, a sample Deepseek-R1 1.5b Model, along with source code and build files, saving you the hassle of navigating complex dependency hell and the expense of your valuable time.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+This repository supports Vulkan banked on some SoCs.Please read the "Build on arm64" to check.
+
+![llamacppforaarch64](logo.png)
+
+# Build on arm64
+Navigate to the soc directory and find the script for your device’s SoC. Then, execute the corresponding script.
+
+For example, if your SoC is a Dimensity 1000+, you should run soc/mediatek/dimensity-1000.sh. (Note: Scripts are typically named after the standard version of the SoC, omitting special edition suffixes like “+” or “Pro”.)
+
+Currently Supported SoCs
+
+| SoC | CPU Optimization | GPU Support | GPU Optimization |
+| ---- | ---- | ---- | ---- |
+| Dimensity1000(+) | √ | × | × |
+| Snapdragon8(+) Gen1 | √ | √ | × |
+
+# Usage
+```bash
+cd llama.cpp/
+chmod +x ds.sh
+./ds.sh
+```
+
+# Performance
+
+SoC : Dimensity 1000+(8c@2.6Ghz)</br>
+platform : CPU</br>
+On average, it is 4 tokens/s(≈2 Chinese character/s) faster than the official Termux build.
+
+![cpu](cpu.jpg)
+
 [![Release](https://img.shields.io/github/v/release/ggml-org/llama.cpp)](https://github.com/ggml-org/llama.cpp/releases)
 [![Server](https://github.com/ggml-org/llama.cpp/actions/workflows/server.yml/badge.svg)](https://github.com/ggml-org/llama.cpp/actions/workflows/server.yml)
 
