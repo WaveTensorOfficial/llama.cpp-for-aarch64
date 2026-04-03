@@ -5,6 +5,7 @@ find_package(Threads REQUIRED)
 add_library(mtmd
             mtmd.cpp
             mtmd-audio.cpp
+            mtmd-image.cpp
             mtmd.h
             mtmd-helper.cpp
             mtmd-helper.h
@@ -16,6 +17,7 @@ add_library(mtmd
             models/models.h
             models/cogvlm.cpp
             models/conformer.cpp
+            models/gemma4v.cpp
             models/glm4v.cpp
             models/internvl.cpp
             models/kimivl.cpp
@@ -30,6 +32,7 @@ add_library(mtmd
             models/qwen3vl.cpp
             models/siglip.cpp
             models/whisper-enc.cpp
+            models/deepseekocr.cpp
             models/mobilenetv5.cpp
             models/youtuvl.cpp
             )
