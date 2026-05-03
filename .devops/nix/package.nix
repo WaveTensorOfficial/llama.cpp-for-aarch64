@@ -16,8 +16,9 @@
   rocmPackages,
   vulkan-headers,
   vulkan-loader,
-  curl,
+  openssl,
   shaderc,
+  spirv-headers,
   useBlas ?
     builtins.all (x: !x) [
       useCuda
@@ -145,6 +146,7 @@ effectiveStdenv.mkDerivation (finalAttrs: {
       ninja
       pkg-config
       git
+      spirv-headers
     ]
     ++ optionals useCuda [
       cudaPackages.cuda_nvcc
@@ -160,7 +162,8 @@ effectiveStdenv.mkDerivation (finalAttrs: {
     ++ optionals useMpi [ mpi ]
     ++ optionals useRocm rocmBuildInputs
     ++ optionals useBlas [ blas ]
-    ++ optionals useVulkan vulkanBuildInputs;
+    ++ optionals useVulkan vulkanBuildInputs
+    ++ [ openssl ];
 
   cmakeFlags =
     [
