@@ -16,9 +16,11 @@ set(HF_VERSION        "" CACHE STRING "Version to download (empty = resolve from
 set(HF_ENABLED        "" CACHE STRING "Whether to allow HF Bucket download (ON/OFF)")
 set(BUILD_UI          "" CACHE STRING "Build UI via npm (ON/OFF)")
 set(LLAMA_UI_EMBED    "" CACHE STRING "Path to llama-ui-embed helper")
+set(LLAMA_UI_GZIP     "" CACHE STRING "Apply gzip compress to assets to save bandwidth")
 
 set(DIST_DIR     "${UI_BINARY_DIR}/dist")
 set(SRC_DIST_DIR "${UI_SOURCE_DIR}/dist")
+set(WORK_DIR     "${UI_BINARY_DIR}/ui-src")
 set(STAMP_FILE   "${UI_BINARY_DIR}/.ui-stamp")
 set(UI_CPP       "${UI_BINARY_DIR}/ui.cpp")
 set(UI_H         "${UI_BINARY_DIR}/ui.h")
@@ -63,6 +65,22 @@ function(npm_build_should_skip out_var)
     set(${out_var} TRUE PARENT_SCOPE)
 endfunction()
 
+function(stage_sources)
+    if(EXISTS "${WORK_DIR}")
+        file(GLOB staged RELATIVE "${WORK_DIR}" "${WORK_DIR}/*")
+        list(REMOVE_ITEM staged "node_modules")
+        foreach(entry ${staged})
+            file(REMOVE_RECURSE "${WORK_DIR}/${entry}")
+        endforeach()
+    endif()
+
+    file(COPY "${UI_SOURCE_DIR}/"
+        DESTINATION "${WORK_DIR}"
+        NO_SOURCE_PERMISSIONS
+        PATTERN "node_modules" EXCLUDE
+    )
+endfunction()
+
 function(npm_build out_var)
     set(${out_var} FALSE PARENT_SCOPE)
 
@@ -88,14 +106,16 @@ function(npm_build out_var)
         return()
     endif()
 
+    stage_sources()
+
     # npm writes node_modules/.package-lock.json on every successful install,
     # so a package-lock.json newer than this marker means node_modules is stale
-    set(NPM_MARKER "${UI_SOURCE_DIR}/node_modules/.package-lock.json")
+    set(NPM_MARKER "${WORK_DIR}/node_modules/.package-lock.json")
     set(need_install FALSE)
     if(NOT EXISTS "${NPM_MARKER}")
         set(need_install TRUE)
     else()
-        file(TIMESTAMP "${UI_SOURCE_DIR}/package-lock.json" lock_ts)
+        file(TIMESTAMP "${WORK_DIR}/package-lock.json" lock_ts)
         file(TIMESTAMP "${NPM_MARKER}" marker_ts)
         if(lock_ts STRGREATER marker_ts)
             set(need_install TRUE)
@@ -106,7 +126,7 @@ function(npm_build out_var)
         message(STATUS "UI: running npm install")
         execute_process(
             COMMAND ${NPM_EXECUTABLE} install
-            WORKING_DIRECTORY "${UI_SOURCE_DIR}"
+            WORKING_DIRECTORY "${WORK_DIR}"
             RESULT_VARIABLE rc
             ERROR_VARIABLE  err
         )
@@ -123,7 +143,7 @@ function(npm_build out_var)
     execute_process(
         COMMAND ${CMAKE_COMMAND} -E env "LLAMA_UI_OUT_DIR=${DIST_DIR}" "LLAMA_UI_VERSION=${HF_VERSION}" "LLAMA_BUILD_NUMBER=${LLAMA_BUILD_NUMBER}"
                 ${NPM_EXECUTABLE} run build
-        WORKING_DIRECTORY "${UI_SOURCE_DIR}"
+        WORKING_DIRECTORY "${WORK_DIR}"
         RESULT_VARIABLE rc
         ERROR_VARIABLE  err
     )
@@ -225,6 +245,33 @@ function(hf_download version out_var out_resolved)
 endfunction()
 
 function(emit_files dist_dir)
+    # If gzip is requested, compress every asset into a parallel _gzip/ tree
+    # the structure stays the same; for ex: /abc/def --> /_gzip/abc/def
+    # embed.cpp will check for _gzip and will pick it up
+    if(LLAMA_UI_GZIP AND EXISTS "${dist_dir}/index.html")
+        find_program(GZIP_EXECUTABLE gzip)
+        if(NOT GZIP_EXECUTABLE)
+            message(WARNING "UI: LLAMA_UI_GZIP requested but gzip not found, embedding uncompressed")
+        else()
+            set(gzip_dir "${dist_dir}/_gzip")
+            file(REMOVE_RECURSE "${gzip_dir}")
+            file(GLOB_RECURSE all_files RELATIVE "${dist_dir}" "${dist_dir}/*")
+            foreach(f ${all_files})
+                get_filename_component(dst_dir "${gzip_dir}/${f}" DIRECTORY)
+                file(MAKE_DIRECTORY "${dst_dir}")
+                execute_process(
+                    COMMAND "${GZIP_EXECUTABLE}" -c "${dist_dir}/${f}"
+                    OUTPUT_FILE "${gzip_dir}/${f}"
+                    RESULT_VARIABLE gz_rc
+                )
+                if(NOT gz_rc EQUAL 0)
+                    message(FATAL_ERROR "UI: gzip failed for ${f}")
+                endif()
+            endforeach()
+            message(STATUS "UI: gzip compression applied (${gzip_dir})")
+        endif()
+    endif()
+
     set(args "${UI_CPP}" "${UI_H}")
     if(EXISTS "${dist_dir}/index.html")
         list(APPEND args "${dist_dir}")
