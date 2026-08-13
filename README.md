@@ -1,4 +1,4 @@
-# llama.cpp for aarch64
+# Llama.cpp For Arm64
 
 In short, this repository is designed to make llama.cpp easily accessible for Android users, particularly those on Termux. It provides **optimized build scripts**, a sample Deepseek-R1 1.5b Model, along with source code and build files, saving you the hassle of navigating complex dependency hell and the expense of your valuable time.
 
